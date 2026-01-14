@@ -1,8 +1,8 @@
 import os
+from flask import Flask
+import threading
 import asyncio
-from flask import Flask, request
-from aiogram.types import Update
-from main import bot, process_update
+from main import run_bot
 
 app = Flask(__name__)
 
@@ -10,12 +10,12 @@ app = Flask(__name__)
 def home():
     return "Bot is running!"
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    update = Update.model_validate(request.json)
-    loop = asyncio.get_event_loop()
-    loop.create_task(process_update(update))
-    return "ok"
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    print(">>> Flask started")
+
+    threading.Thread(
+        target=lambda: asyncio.run(run_bot()),
+        daemon=True
+    ).start()
+
+    app.run(host="0.0.0.0", port=10000)
