@@ -1,8 +1,8 @@
 import os
-import asyncio
 from boltiotai import openai
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+from aiogram.types import Update
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOLTIOTAI_API_KEY = os.getenv("BOLTIOTAI_API_KEY")
@@ -20,7 +20,7 @@ dp = Dispatcher()
 
 @dp.message(Command(commands=["start", "help"]))
 async def welcome(message: types.Message):
-    await message.reply("Hello! I am your smart bot. How can I help you?")
+    await message.reply("Hello! I am your smart bot 🤖\nHow can I help you?")
 
 @dp.message()
 async def gpt(message: types.Message):
@@ -29,16 +29,13 @@ async def gpt(message: types.Message):
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": message.text}]
         )
-        await message.reply(response["choices"][0]["message"]["content"].strip())
+
+        reply = response["choices"][0]["message"]["content"].strip()
+        await message.reply(reply)
+
     except Exception as e:
-        await message.reply(f"Error: {e}")
+        await message.reply(f"⚠️ Error: {e}")
 
-async def run_bot():
-    print(">>> Bot polling started")
-    await dp.start_polling(bot)
 
-# 👇 THIS is the magic
-if __name__ == "__main__":
-    # If running on Replit → start bot directly
-    if os.getenv("RENDER") != "true":
-        asyncio.run(run_bot())
+async def process_update(update: Update):
+    await dp.feed_update(bot, update)
