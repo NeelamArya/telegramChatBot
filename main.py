@@ -7,11 +7,8 @@ from aiogram.types import Update
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOLTIOTAI_API_KEY = os.getenv("BOLTIOTAI_API_KEY")
 
-if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN not found")
-
-if not BOLTIOTAI_API_KEY:
-    raise ValueError("BOLTIOTAI_API_KEY not found")
+if not BOT_TOKEN or not BOLTIOTAI_API_KEY:
+    raise ValueError("BOT_TOKEN or BOLTIOTAI_API_KEY not found")
 
 openai.api_key = BOLTIOTAI_API_KEY
 
@@ -29,13 +26,10 @@ async def gpt(message: types.Message):
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": message.text}]
         )
-
         reply = response["choices"][0]["message"]["content"].strip()
         await message.reply(reply)
-
     except Exception as e:
         await message.reply(f"⚠️ Error: {e}")
-
 
 async def process_update(update: Update):
     await dp.feed_update(bot, update)
