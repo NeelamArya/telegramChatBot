@@ -37,7 +37,7 @@ async def run_bot():
     print(">>> Bot polling started")
     await dp.start_polling(bot)
 
-# 👇 THIS is the magic
+
 if __name__ == "__main__":
     # If running on Replit → start bot directly
     if os.getenv("RENDER") != "true":
