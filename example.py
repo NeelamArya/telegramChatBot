@@ -1,40 +1,20 @@
 import os
-import threading
 import asyncio
-import time
-import requests
-from flask import Flask
-from main import run_bot
+from flask import Flask, request
+from main import handle_update
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
     return "Bot is running!"
 
-def start_bot():
-    asyncio.run(run_bot())
-
-def keep_alive():
-    while True:
-        try:
-            requests.get("http://127.0.0.1:10000/")
-            print(">>> Ping sent")
-        except Exception as e:
-            print(">>> Ping failed:", e)
-        time.sleep(600)  # 10 minutes = 600 seconds
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    update = request.get_json(force=True)
+    asyncio.run(handle_update(update))
+    return "ok"
 
 if __name__ == "__main__":
-    print(">>> Flask started")
-
-    threading.Thread(
-        target=start_bot,
-        daemon=True
-    ).start()
-
-    threading.Thread(
-        target=keep_alive,
-        daemon=True
-    ).start()
-
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
