@@ -1,44 +1,46 @@
 import os
-import asyncio
 from boltiotai import openai
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-BOLTIOTAI_API_KEY = os.getenv("BOLTIOTAI_API_KEY")
-
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN not found")
 
-if not BOLTIOTAI_API_KEY:
+BOLT_API_KEY = os.environ.get("BOLTIOTAI_API_KEY", "").strip()
+if not BOLT_API_KEY:
     raise ValueError("BOLTIOTAI_API_KEY not found")
 
-openai.api_key = BOLTIOTAI_API_KEY
+openai.api_key = BOLT_API_KEY
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 @dp.message(Command(commands=["start", "help"]))
 async def welcome(message: types.Message):
-    await message.reply("Hello! I am your smart bot. How can I help you?")
+    await message.reply(
+        "Hello! I am your smart bot.How can I help you?"
+    )
 
 @dp.message()
 async def gpt(message: types.Message):
     try:
         response = openai.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": message.text}]
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": message.text}
+            ]
         )
-        await message.reply(response["choices"][0]["message"]["content"].strip())
+        reply_text = response["choices"][0]["message"]["content"]
     except Exception as e:
-        await message.reply(f"Error: {e}")
+        reply_text = f"Error: {e}"
 
-async def run_bot():
-    print(">>> Bot polling started")
-    await dp.start_polling(bot)
+    await message.reply(reply_text)
 
 
-if __name__ == "__main__":
-    # If running on Replit → start bot directly
-    if os.getenv("RENDER") != "true":
-        asyncio.run(run_bot())
+async def handle_update(update: dict):
+    """
+    This function will be called by Flask webhook
+    """
+    await dp.feed_webhook_update(bot, update)
